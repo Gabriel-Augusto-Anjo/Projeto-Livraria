@@ -7,6 +7,7 @@ public class Emprestimo {
     private LocalDate dataEmprestimo;
     private LocalDate dataDevolucao;
 
+
     public Livro getLivro() {
         return livro;
     }
@@ -46,4 +47,5 @@ public class Emprestimo {
     public void setId(int id) {
         this.id = id;
     }
+
 }

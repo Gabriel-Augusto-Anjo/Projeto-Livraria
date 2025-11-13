@@ -3,10 +3,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
 
-public class Biblioteca {
+public class Biblioteca extends Emprestimo{
     private static List<Livro> livros = new ArrayList<>();
     private static List<Autor> autores = new ArrayList<>();
     private static List<Emprestimo> emprestimos = new ArrayList<>();
+
+    Emprestimo emprestimo = new Emprestimo();
 
     static {
         Livro l1 = new Livro(1, "Harry Potter 1", "Gabriel", "sim", "11/11/2025", "11/11/2025");
@@ -42,6 +44,16 @@ public class Biblioteca {
                 } else {
                     continue;
                 }
+            }
+        }
+    }
+
+    public void emprestar () {
+        for (Livro l : livros) {
+            if (l.id == emprestimo.getId()) {
+                l.disponivel = "não";
+                Emprestimo emp1 = new Emprestimo();
+                emp1.setNomeCliente(getNomeCliente());
             }
         }
     }

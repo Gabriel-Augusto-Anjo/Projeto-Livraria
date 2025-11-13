@@ -14,10 +14,20 @@ public class Livraria {
 
         switch (resposta) {
             case "sim" :
-                biblioteca.listarLivros();
+                try {
+                    biblioteca.listarLivros();
 
-                System.out.print("Escolha um livro para emprestimo atraves do id : ");
-                int idEscolhido = scanner.nextInt();
+                    System.out.print("Escolha um livro para emprestimo atraves do id : ");
+                    biblioteca.setId(scanner.nextInt());
+
+                    System.out.println("Insira seu nome para emprestimo");
+                    biblioteca.setNomeCliente(scanner.next());
+
+                    biblioteca.emprestar();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+
             case "não" :
                 System.out.println("Execução finalizada com sucesso");
         }
