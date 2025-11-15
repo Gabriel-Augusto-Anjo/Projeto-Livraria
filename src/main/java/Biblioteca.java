@@ -1,60 +1,85 @@
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
-import java.util.Scanner;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
-public class Biblioteca extends Emprestimo{
-    private static List<Livro> livros = new ArrayList<>();
-    private static List<Autor> autores = new ArrayList<>();
-    private static List<Emprestimo> emprestimos = new ArrayList<>();
+/**
+ * Classe que gerencia coleções de autores, livros e empréstimos.
+ * Não usa campos estáticos — permite instanciar várias bibliotecas.
+ */
+public class Biblioteca {
+    private final List<Livro> livros = new ArrayList<>();
+    private final List<Autor> autores = new ArrayList<>();
+    private final List<Emprestimo> emprestimos = new ArrayList<>();
 
-    Emprestimo emprestimo = new Emprestimo();
+    // IDs simples gerados localmente
+    private final AtomicInteger nextLivroId = new AtomicInteger(1);
+    private final AtomicInteger nextAutorId = new AtomicInteger(1);
+    private final AtomicInteger nextEmprestimoId = new AtomicInteger(1);
 
-    static {
-        Livro l1 = new Livro(1, "Harry Potter 1", "Gabriel", "sim", "11/11/2025", "11/11/2025");
-        Livro l2 = new Livro(2, "Harry Potter 2", "Gabriel", "sim", "11/11/2025", "11/11/2025");
-        Livro l3 = new Livro(3, "Harry Potter 3", "Gabriel", "sim", "11/11/2025", "11/11/2025");
-
-        Autor a1 = new Autor(1, "Gabriel", "11/02/2004");
-        Autor a2 = new Autor(2, "Roberto", "10/02/2006");
-        Autor a3 = new Autor(3, "Miguel", "11/09/2001");
-
-        livros.add(l1);
-        livros.add(l2);
-        livros.add(l3);
-
-        autores.add(a1);
-        autores.add(a2);
-        autores.add(a3);
+    // AUTHORS
+    public Autor adicionarAutor(String nome, String dataNascimentoStr) {
+        Autor a = new Autor(nextAutorId.getAndIncrement(), nome, dataNascimentoStr);
+        autores.add(a);
+        return a;
     }
 
-
-    public void adicionarLivro (Livro livro) {
-        livros.add(livro);
+    public Optional<Autor> buscarAutorPorId(int id) {
+        return autores.stream().filter(a -> a.getId() == id).findFirst();
     }
 
-    public void listarLivros () {
-        if (livros.isEmpty()) {
-            System.out.println("nenhum livro disponivel");
-        } else {
-            System.out.println("Os seguintes livros estão disponiveis:");
-            for (Livro l : livros) {
-                if (l.disponivel == "sim") {
-                    System.out.println(l.titulo + " id : " + l.id);
-                } else {
-                    continue;
-                }
-            }
-        }
+    public Optional<Autor> buscarAutorPorNome(String nome) {
+        return autores.stream().filter(a -> a.getNome().equalsIgnoreCase(nome)).findFirst();
     }
 
-    public void emprestar () {
-        for (Livro l : livros) {
-            if (l.id == emprestimo.getId()) {
-                l.disponivel = "não";
-                Emprestimo emp1 = new Emprestimo();
-                emp1.setNomeCliente(getNomeCliente());
-            }
-        }
+    public List<Autor> listarAutores() {
+        return List.copyOf(autores);
+    }
+
+    // BOOKS
+    public Livro adicionarLivro(String titulo, Autor autor) {
+        Livro l = new Livro(nextLivroId.getAndIncrement(), titulo, autor);
+        livros.add(l);
+        return l;
+    }
+
+    public Optional<Livro> buscarLivroPorId(int id) {
+        return livros.stream().filter(l -> l.getId() == id).findFirst();
+    }
+
+    public List<Livro> listarLivros() {
+        return List.copyOf(livros);
+    }
+
+    public boolean removerLivro(int id) {
+        return buscarLivroPorId(id).map(livros::remove).orElse(false);
+    }
+
+    // LOANS
+    public Emprestimo emprestarLivro(int livroId, String cliente) {
+        Livro l = buscarLivroPorId(livroId).orElseThrow(() -> new IllegalArgumentException("Livro não encontrado"));
+        if (!l.isDisponivel()) throw new IllegalStateException("Livro não disponível");
+        l.setDisponivel(false);
+        Emprestimo e = new Emprestimo(nextEmprestimoId.getAndIncrement(), l, cliente, LocalDate.now());
+        emprestimos.add(e);
+        return e;
+    }
+
+    public void devolverEmprestimo(int emprestimoId) {
+        Emprestimo e = emprestimos.stream().filter(x -> x.getId() == emprestimoId)
+                .findFirst().orElseThrow(() -> new IllegalArgumentException("Empréstimo não encontrado"));
+        if (e.isDevolvido()) throw new IllegalStateException("Já devolvido");
+        e.devolver(LocalDate.now());
+    }
+
+    public List<Emprestimo> listarEmprestimosAtivos() {
+        List<Emprestimo> ativos = new ArrayList<>();
+        for (Emprestimo e : emprestimos) if (!e.isDevolvido()) ativos.add(e);
+        return List.copyOf(ativos);
+    }
+
+    public List<Emprestimo> listarTodosEmprestimos() {
+        return List.copyOf(emprestimos);
     }
 }
